@@ -7,7 +7,7 @@ int buzzer = 8;
 int led = 7;
 
 void setup() {
-   Serial.begin(9600);
+   //Serial.begin(9600);
    pinMode(buzzer,OUTPUT);
    pinMode(led, OUTPUT);
    delay(1000);
@@ -17,7 +17,7 @@ void setup() {
 
 void loop() {
    distance = sr04.Distance();
-   Serial.println(distance); 
+   //Serial.println(distance); 
 
    if(distance <= 30 && distance >= 20){
       digitalWrite(buzzer, HIGH);
