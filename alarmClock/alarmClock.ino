@@ -6,48 +6,60 @@
 DS3231 clock;
 RTCDateTime dt;
 
-int latch=9;  //74HC595  pin 9 STCP
-int clockPin=10; //74HC595  pin 10 SHCP
-int data=8;   //74HC595  pin 8 DS
-int led = 6;
-int buttonOne = 5;
-int buttonTwo = 4;
-int buttonThree = 3;
-int buttonFour = 2;
+int latch=12;  //74HC595  pin 9 STCP
+int clockPin=13; //74HC595  pin 10 SHCP
+int data=11;   //74HC595  pin 8 DS
+int controlPins[4] = {10,9,8,7};
 
-unsigned char table[]=
-{0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c
-,0x39,0x5e,0x79,0x71,0x00};
+
+const byte numbers[10] =
+{
+  B00111111,  // 0
+  B00000110,  // 1
+  B01011011,  // 2
+  B01001111,  // 3
+  B01100110,  // 4
+  B01101101,  // 5
+  B01111101,  // 6
+  B00000111,  // 7
+  B01111111,  // 8
+  B01101111  // 9
+};
 
 void setup() {
   pinMode(latch,OUTPUT);
   pinMode(clockPin,OUTPUT);
   pinMode(data,OUTPUT);
 
-  pinMode(led, OUTPUT);
-  pinMode(buttonOne, INPUT);
-  pinMode(buttonTwo, INPUT);
-  pinMode(buttonThree, INPUT);
-  pinMode(buttonFour, INPUT);
+  for (int i = 0; i < 4; i++)
+  {
+    pinMode(controlPins[i], OUTPUT);
+  }
 
   clock.begin();
-  clock.setDateTime(2021, 02, 02, 10, 27, 00);
+  //clock.setDateTime(2021, 03, 03, 07, 36, 00);
 
   Serial.begin(9600);
 }
 
 void Display(unsigned char num)
 {
-
-  digitalWrite(latch,LOW);
-  shiftOut(data,clockPin,MSBFIRST,table[num]);
-  digitalWrite(latch,HIGH);
+  for (int i = 0; i < 4; i++)
+  {
+    digitalWrite(controlPins[i], HIGH);
+  }
   
+  digitalWrite(latch,LOW);
+  shiftOut(data,clockPin,MSBFIRST,numbers[9]);
+  digitalWrite(latch,HIGH);
+
+  digitalWrite(controlPins[1], LOW);
 }
 void loop() {
   dt = clock.getDateTime();
   
-  Serial.print(dt.second);
+  Serial.print(dt.hour);
+  Serial.print(dt.minute);
   Display(3);
   delay(1000);
 }
