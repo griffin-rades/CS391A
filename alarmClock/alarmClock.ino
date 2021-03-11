@@ -17,15 +17,16 @@ int clockPin=13; //74HC595  pin 10 SHCP
 int data=11;   //74HC595  pin 8 DS
 int controlPins[4] = {7,8,9,10};
 int ledPin = 6;
-int buttonPins[4] = {2,4,5};
+int buttonPins[4] = {2,3,4,5};
 int setButtonState = 0; 
 int hourButtonState = 0;
 int minButtonState = 0;
+int alarmOnState = 0;
 int hourState = 1;
 int minState = 1;
 int alarmON = 0; 
-int hourAlarm = -1;
-int minuteAlarm = -1;
+int alarmHour = 0;
+int alarmMin = 0;
 
 
 const byte numbers[10] =
@@ -53,15 +54,13 @@ void setup() {
     digitalWrite(controlPins[i], HIGH);
   }
 
-  for(int i = 0; i < 3; i++){
+  for(int i = 0; i < 4; i++){
     pinMode(buttonPins[i], INPUT_PULLUP);
   }
 
   pinMode(ledPin, OUTPUT);
 
   clock.begin();
-  //clock.setDateTime(2021, 03, 9, 11, 20, 00);
-
   Serial.begin(9600);
 }
 
@@ -114,25 +113,68 @@ void increaseMin(int minute){
   minState = 0;
 }
 
-void setAlarm(){
-  
+void increaseHourAlarm(int hour){
+  if(hour + 1 > 24){
+    alarmHour = 1;
+  }else{
+    alarmHour += 1;
+  }
+  hourState = 0;
+}
+void increaseMinAlarm(int minute){
+  if(minute + 1 > 60){
+    alarmMin = 0;
+  }else{
+    alarmMin += 1;
+  }
+  minState = 0;
 }
 
 void loop() {
   dt = clock.getDateTime();
  
   setButtonState = digitalRead(buttonPins[0]);
-  hourButtonState = digitalRead(buttonPins[2]);
-  minButtonState = digitalRead(buttonPins[1]);
+  alarmOnState = digitalRead(buttonPins[1]);
+  hourButtonState = digitalRead(buttonPins[3]);
+  minButtonState = digitalRead(buttonPins[2]);
 
 //  Serial.print(hourState);
 //  Serial.println(hourButtonState);
   
-  if(setButtonState == 0){
-    setAlarm();
-  }else{
+  if(setButtonState == 0 && alarmON == 1){
     if(hourButtonState == 0 && minButtonState == 0){
+      alarmON = 0;
+    }
+    
+    if(hourButtonState == 0 && hourState == 1){
+      increaseHourAlarm(alarmHour);
+    }
+  
+    if(minButtonState == 0 && minState == 1){
+      increaseMinAlarm(alarmMin);
+    }
+
+    Serial.print(alarmHour);
+    Serial.print(alarmMin);
+    Serial.println(hourButtonState);
+    setDisplay(alarmHour / 10, alarmHour % 10, alarmMin / 10, alarmMin % 10);
+
+    if(hourButtonState == 1){
+      hourState = 1;
+    }else{
+      hourState = 0;
+    }
+    if(minButtonState == 1){
+      minState = 1;
+    }else{
+      minState = 0;
+    }
+    
+  }else{
+    if(alarmOnState == 0){
       alarmON = 1;
+      alarmHour = 0;
+      alarmMin = 0;
     }
     
     if(hourButtonState == 0 && hourState == 1){
@@ -143,7 +185,7 @@ void loop() {
       increaseMin(dt.minute);
     }
   
-    if(dt.hour == hourAlarm && dt.minute == minuteAlarm){
+    if(dt.hour == alarmHour && dt.minute == alarmMin){
       digitalWrite(ledPin, LOW);
       delay(200);
       digitalWrite(ledPin, HIGH);
@@ -156,8 +198,11 @@ void loop() {
       delay(200);
       digitalWrite(ledPin, HIGH);
       delay(200);
+      digitalWrite(ledPin, LOW);
   
       alarmON = 0;
+      alarmHour = 0;
+      alarmMin = 0;
     }
   
     leftH = dt.hour / 10; 
