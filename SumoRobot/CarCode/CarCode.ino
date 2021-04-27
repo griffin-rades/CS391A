@@ -41,24 +41,21 @@ void forward(){
    backup();
    delay(400);
    
-   for(int i = 1; i <= 200; i += 10){
-      delay(5);
-      if(distanceTest() < 60){
-          break;
-       }else{
-        turn();
-        delay(i);
-       }
+   if(distanceTest() < 50){
+      forward;
+   }else{
+      turn();
    }
 }
 
 void turn(){
-    analogWrite(ENA, carSpeed - 30);
-    analogWrite(ENB, carSpeed - 30);
-    digitalWrite(leftWheels, LOW);
-    digitalWrite(leftWheelsReverse, HIGH);
-    digitalWrite(rightWheelsReverse, LOW);
-    digitalWrite(rightWheels, HIGH);
+    do{
+        digitalWrite(leftWheels, LOW);
+        digitalWrite(leftWheelsReverse, HIGH);
+        digitalWrite(rightWheelsReverse, LOW);
+        digitalWrite(rightWheels, HIGH);
+    }
+    while(distanceTest() > 50);
 }
 
 void backup(){
